@@ -2,8 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>成都二三圈层作战地图 Pro</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>成都二三圈层作战地图</title>
 <style>
 /* required styles */
 
@@ -669,27 +669,32 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
 </style>
 <style>
-  html,body{margin:0;height:100%;font-family:"PingFang SC","Microsoft YaHei",sans-serif;background:#f2f4f7}
+  html,body{margin:0;height:100%;font-family:"PingFang SC","Microsoft YaHei",sans-serif;background:#f2f4f7;overscroll-behavior:none}
   #app{display:flex;height:100%}
   #map{flex:1;height:100%}
   #side{width:340px;background:#fff;box-shadow:-2px 0 10px rgba(0,0,0,.10);display:flex;flex-direction:column;z-index:1000}
-  #side header{padding:10px 14px;border-bottom:1px solid #eee}
-  #side header h1{margin:0;font-size:16px}
-  #side header small{color:#888;font-size:12px}
-  .stats{display:flex;gap:6px;padding:8px 12px;border-bottom:1px solid #eee;font-size:12px}
-  .stats .st{flex:1;background:#f5f7fb;border-radius:8px;padding:6px 4px;text-align:center}
-  .stats .st b{display:block;font-size:16px;color:#1d4ed8}
+  #side header{padding:8px 14px 6px;border-bottom:1px solid #eee}
+  #side header h1{margin:0;font-size:15px;display:inline}
+  #side header small{color:#888;font-size:11px;display:block;margin-top:2px}
+  .stats{display:flex;gap:6px;padding:7px 12px;border-bottom:1px solid #eee;font-size:12px}
+  .stats .st{flex:1;background:#f5f7fb;border-radius:8px;padding:5px 4px;text-align:center}
+  .stats .st b{display:block;font-size:15px;color:#1d4ed8}
   .stats .st.warn b{color:#dc2626}
-  .toolbar{padding:8px 12px;border-bottom:1px solid #eee;display:flex;gap:6px;flex-wrap:wrap}
+  #coverage{padding:6px 12px 8px;border-bottom:1px solid #eee}
+  #coverage .cov-title{font-size:11px;color:#6b7280;margin-bottom:4px}
+  #coverage .chips{display:flex;flex-wrap:wrap;gap:4px}
+  .chip{font-size:11px;padding:2px 7px;border-radius:10px;background:#eef2f7;color:#9ca3af;cursor:pointer;user-select:none}
+  .chip.has{background:#dcfce7;color:#15803d;font-weight:600}
+  .toolbar{padding:7px 12px;border-bottom:1px solid #eee;display:flex;gap:5px;flex-wrap:wrap}
   .toolbar button{padding:5px 9px;border:1px solid #d0d4dc;border-radius:6px;background:#fff;font-size:12.5px;cursor:pointer}
   .toolbar button.primary{background:#2563eb;color:#fff;border-color:#2563eb}
   .toolbar button.active{background:#1e40af;color:#fff;border-color:#1e40af}
-  .filters{padding:6px 12px;border-bottom:1px solid #eee;font-size:12px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .filters{padding:6px 12px;border-bottom:1px solid #eee;font-size:12px;display:flex;gap:5px;align-items:center;flex-wrap:wrap}
   .filters select,.filters input{font-size:12px;padding:3px 5px;border:1px solid #cbd5e1;border-radius:5px}
-  .filters input{width:110px}
+  .filters input{width:100px}
   .filters label{display:flex;align-items:center;gap:2px}
   .tip{padding:6px 12px;background:#fff7d6;font-size:12px;color:#8a6d00;border-bottom:1px solid #eee;display:none}
-  #records{flex:1;overflow-y:auto;padding:8px 10px;font-size:13px}
+  #records{flex:1;overflow-y:auto;padding:8px 10px;font-size:13px;-webkit-overflow-scrolling:touch}
   .group-title{font-weight:600;margin:10px 2px 4px;color:#374151;font-size:13px}
   .rec{border:1px solid #e5e7eb;border-left:4px solid #ccc;border-radius:8px;padding:6px 8px;margin:5px 0;cursor:pointer;background:#fafafa}
   .rec:hover{background:#eef4ff}
@@ -702,20 +707,50 @@ svg.leaflet-image-layer.leaflet-interactive path {
   .rec .nt{color:#6b7280;margin-top:2px;font-size:12px;word-break:break-all}
   .rec .dt{float:right;color:#9ca3af;font-size:11px}
   .rec .dt.old{color:#dc2626;font-weight:600}
+  .rec .recops{margin-top:4px;display:flex;gap:6px;align-items:center}
+  .rec .navbtn{font-size:11px;color:#2563eb;border:1px solid #bfdbfe;border-radius:5px;padding:1px 7px;background:#eff6ff;cursor:pointer}
+  .rec .thumb{max-width:52px;max-height:52px;border-radius:5px;margin-top:4px;margin-right:4px;cursor:zoom}
+  .rec .pcount{font-size:11px;color:#6b7280}
   .empty{color:#9ca3af;text-align:center;margin-top:30px;line-height:1.8}
-  #form{display:none;position:absolute;top:0;right:340px;width:300px;max-height:100%;overflow-y:auto;background:#fff;box-shadow:0 0 18px rgba(0,0,0,.18);padding:12px 14px;font-size:13px;z-index:1200;border-radius:0 0 0 10px}
+  #form{display:none;position:absolute;top:0;right:340px;width:300px;max-height:100%;overflow-y:auto;background:#fff;box-shadow:0 0 18px rgba(0,0,0,.18);padding:12px 14px;font-size:13px;z-index:1200;border-radius:0 0 0 10px;box-sizing:border-box}
   #form h3{margin:0 0 6px;font-size:14px}
   #form label{display:block;margin-top:7px;font-size:12px;color:#4b5563}
-  #form input,#form textarea,#form select{width:96%;padding:5px 6px;border:1px solid #cbd5e1;border-radius:5px;font-size:13px;margin-top:2px}
+  #form input,#form textarea,#form select{width:96%;padding:5px 6px;border:1px solid #cbd5e1;border-radius:5px;font-size:13px;margin-top:2px;box-sizing:border-box}
   #form .btns{margin-top:10px;display:flex;gap:8px}
   #form button{padding:6px 14px;border-radius:6px;border:none;cursor:pointer;font-size:13px}
   #fOk{background:#2563eb;color:#fff} #fCancel{background:#e5e7eb} #fDel{background:#fee2e2;color:#b91c1c;margin-left:auto}
+  #photoRow{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
+  #photoRow .ph{position:relative}
+  #photoRow img{width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid #d1d5db}
+  #photoRow .rm{position:absolute;top:-5px;right:-5px;background:#dc2626;color:#fff;border-radius:50%;width:17px;height:17px;font-size:11px;line-height:17px;text-align:center;cursor:pointer}
   .legend{background:#fff;padding:8px 10px;border-radius:8px;box-shadow:0 1px 5px rgba(0,0,0,.2);font-size:12px;line-height:1.9}
   .legend i{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:4px;vertical-align:-1px}
   .dist-label{font-size:13px;font-weight:600;color:#1f2937;text-shadow:0 0 3px #fff,0 0 3px #fff;white-space:nowrap}
+  #storeBar{font-size:10.5px;color:#9ca3af;padding:3px 12px 30px;border-top:1px solid #f0f0f0}
+  #expandBtn{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);z-index:1001;background:rgba(255,255,255,.92);border:1px solid #d0d4dc;border-radius:16px;padding:3px 14px;font-size:12px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.15);display:none}
+
+  /* ===== 移动端 ===== */
+  @media (max-width: 768px){
+    #app{flex-direction:column}
+    #map{height:52%}
+    #side{width:100%;height:48%;box-shadow:0 -3px 12px rgba(0,0,0,.12)}
+    #side header{padding:6px 12px 4px}
+    #side header small{display:none}
+    #side header h1{font-size:13.5px}
+    #form{position:fixed;top:0;right:0;left:0;bottom:0;width:100%;max-height:none;height:100%;border-radius:0;z-index:2000;padding:14px 16px}
+    #form .btns{padding-bottom:20px}
+    #expandBtn{display:block}
+    body.side-full #map{height:30%}
+    body.side-full #side{height:70%}
+    body.side-full #records{display:block}
+    body.side-peek #records{display:none}
+    .filters{overflow-x:auto;flex-wrap:nowrap;white-space:nowrap;gap:7px;padding:7px 12px}
+    .filters input{width:88px}
+    .legend{display:none}
+  }
 </style>
 </head>
-<body>
+<body class="">
 <div id="app">
   <div id="map"></div>
   <div id="form"></div>
@@ -725,12 +760,13 @@ svg.leaflet-image-layer.leaflet-interactive path {
       <small>数据保存在本机浏览器 · 记得定期导出备份</small>
     </header>
     <div class="stats" id="stats"></div>
+    <div id="coverage"><div class="cov-title">区县覆盖</div><div class="chips" id="covChips"></div></div>
     <div class="tip" id="tip"></div>
     <div class="toolbar">
-      <button id="addBtn" class="primary">＋打点记录</button>
-      <button id="locBtn">📍我的位置</button>
-      <button id="exportBtn">备份JSON</button>
-      <button id="csvBtn">导出CSV</button>
+      <button id="addBtn" class="primary">＋打点</button>
+      <button id="locBtn">📍定位</button>
+      <button id="exportBtn">备份</button>
+      <button id="csvBtn">CSV</button>
       <button id="importBtn">导入</button>
       <input type="file" id="importFile" accept=".json" style="display:none">
     </div>
@@ -744,14 +780,16 @@ svg.leaflet-image-layer.leaflet-interactive path {
         <option value="已闭环">已闭环</option>
         <option value="已解决">已解决</option>
       </select>
-      <input id="kw" placeholder="搜索名称/备注">
-      <label><input type="checkbox" id="ly1" checked>二圈层</label>
-      <label><input type="checkbox" id="ly2" checked>三圈层</label>
-      <label><input type="checkbox" id="ly0">中心城区</label>
+      <input id="kw" placeholder="搜索">
+      <label><input type="checkbox" id="ly1" checked>二圈</label>
+      <label><input type="checkbox" id="ly2" checked>三圈</label>
+      <label><input type="checkbox" id="ly0">中心</label>
     </div>
     <div id="records"></div>
+    <div id="storeBar"></div>
   </div>
 </div>
+<button id="expandBtn">▲ 展开列表</button>
 <script>
 /* @preserve
  * Leaflet 1.9.4, a JS library for interactive maps. https://leafletjs.com
@@ -765,8 +803,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
 var CIRCLE1 = ['温江区','郫都区','新都区','龙泉驿区','双流区'];
 var CIRCLE2 = ['都江堰市','金堂县','邛崃市','大邑县','简阳市'];
 var EAST_NEW = {name:'东部新区', lat:30.42, lng:104.55};
+var ALL_DISTRICTS = CIRCLE1.concat(CIRCLE2).concat([EAST_NEW.name]);
 
-// ============ 记录类型（可继续加） ============
+// ============ 记录类型 ============
 var SCHEMAS = {
   '重点街道': {icon:'📍', color:'#e11d48', status:null, fields:[
     {k:'level', label:'等级', type:'select', opts:['核心街道','重点街道','一般']},
@@ -798,14 +837,14 @@ var SCHEMAS = {
     {k:'obs', label:'观察', type:'text', ph:'投放量、摆放、活动…'}
   ]}
 };
-var CAT_STYLE = {}; Object.keys(SCHEMAS).forEach(function(k){ CAT_STYLE[k]=SCHEMAS[k]; });
 
-var map = L.map('map',{center:[30.66,104.05], zoom:9});
+var map = L.map('map',{center:[30.66,104.05], zoom:9, tap:true});
 L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',
   {subdomains:'1234', attribution:'高德底图'}).addTo(map);
 
 var layers = {0:L.layerGroup(),1:L.layerGroup(),2:L.layerGroup()};
 layers[1].addTo(map); layers[2].addTo(map);
+var distCenters = {};
 
 function styleOf(name){
   if(CIRCLE1.indexOf(name)>=0) return {color:'#2563eb',weight:2,fillColor:'#60a5fa',fillOpacity:.25};
@@ -846,39 +885,61 @@ var geo = {"type":"FeatureCollection","features":[{"type":"Feature","properties"
     var n=l.feature.properties.name;
     layers[circleOf(n)].addLayer(l);
     var b=l.getBounds().getCenter();
+    distCenters[n]=b;
     L.marker(b,{icon:L.divIcon({className:'',html:'<div class="dist-label">'+n+'</div>',iconSize:null})})
       .addTo(layers[circleOf(n)]);
   });
+  distCenters[EAST_NEW.name]=L.latLng(EAST_NEW.lat,EAST_NEW.lng);
   L.circleMarker([EAST_NEW.lat,EAST_NEW.lng],{radius:8,color:'#d97706',fillColor:'#fbbf24',fillOpacity:.6,weight:2})
     .bindTooltip('东部新区',{permanent:true,direction:'right'})
     .on('click',function(e){ if(addMode) pickPoint(e.latlng); })
     .addTo(layers[2]);
 })();
 
-var lg=L.control({position:'bottomright'});
-lg.onAdd=function(){ var d=L.DomUtil.create('div','legend');
-  var h='<b>圈层</b><br><i style="background:#fbbf24"></i>三圈层<br><i style="background:#60a5fa"></i>二圈层<br><i style="background:#e5e7eb"></i>中心城区（可选）<br><b>记录</b><br>';
-  Object.keys(SCHEMAS).forEach(function(k){ h+=SCHEMAS[k].icon+' '+k+'<br>'; });
-  return d; d.innerHTML=h; };
-setTimeout(function(){ lg.getContainer().innerHTML = (function(){ var h='<b>圈层</b><br><i style="background:#fbbf24"></i>三圈层<br><i style="background:#60a5fa"></i>二圈层<br><i style="background:#e5e7eb"></i>中心城区<br><b>记录</b><br>'; Object.keys(SCHEMAS).forEach(function(k){ h+=SCHEMAS[k].icon+' '+k+'<br>'; }); return h; })(); }, 300);
-lg.addTo(map);
+setTimeout(function(){
+  var lg=L.control({position:'bottomright'});
+  lg.onAdd=function(){ var d=L.DomUtil.create('div','legend');
+    var h='<b>圈层</b><br><i style="background:#fbbf24"></i>三圈层<br><i style="background:#60a5fa"></i>二圈层<br><i style="background:#e5e7eb"></i>中心城区<br><b>记录</b><br>';
+    Object.keys(SCHEMAS).forEach(function(k){ h+=SCHEMAS[k].icon+' '+k+'<br>'; });
+    d.innerHTML=h; return d; };
+  lg.addTo(map);
+}, 300);
 
 // ============ 数据 ============
-var KEY='cd_map_records_v1';
+var KEY='***';
 var records = [];
 try{ records = JSON.parse(localStorage.getItem(KEY)||'[]'); }catch(e){ records=[]; }
-// 旧数据兼容：无 fields 的补空
-records.forEach(function(r){ if(!r.fields) r.fields={}; if(!SCHEMAS[r.cat]&&r.cat==='重点拜访') r.cat='外勤拜访'; });
+records.forEach(function(r){ if(!r.fields) r.fields={}; if(!r.photos) r.photos=[]; if(!SCHEMAS[r.cat]&&r.cat==='重点拜访') r.cat='外勤拜访'; });
 
-function save(){ localStorage.setItem(KEY, JSON.stringify(records)); }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(records)); }catch(e){ alert('存储已满！请删除部分照片记录，或导出备份后清理。\n错误：'+e.message); } }
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
-
-var markers = {};
 function today(){ return new Date().toISOString().slice(0,10); }
 function daysAgo(d){ return Math.floor((Date.now()-new Date(d).getTime())/86400000); }
-
 function statusClass(s){ return s==='已闭环'||s==='已解决'?'done':(s==='跟进中'?'doing':'open'); }
 
+// ============ 照片 ============
+function compressPhoto(file, cb){
+  var rd=new FileReader();
+  rd.onload=function(){
+    var img=new Image();
+    img.onload=function(){
+      var maxDim=1000,w=img.width,h=img.height;
+      if(w>=h&&w>maxDim){h=Math.round(h*maxDim/w);w=maxDim;}
+      else if(h>maxDim){w=Math.round(w*maxDim/h);h=maxDim;}
+      var c=document.createElement('canvas'); c.width=w;c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      cb(c.toDataURL('image/jpeg',0.62));
+    };
+    img.src=rd.result;
+  };
+  rd.readAsDataURL(file);
+}
+function navTo(r){
+  var url='https://uri.amap.com/navigation?to='+Number(r.lng).toFixed(6)+','+Number(r.lat).toFixed(6)+','+encodeURIComponent(r.name)+'&mode=car&policy=1&coordinate=gaode';
+  window.open(url,'_blank');
+}
+
+var markers = {};
 function renderStats(){
   var open=0, week=0;
   records.forEach(function(r){
@@ -887,18 +948,40 @@ function renderStats(){
   });
   document.getElementById('stats').innerHTML =
     '<div class="st"><b>'+records.length+'</b>总记录</div>'+
-    '<div class="st"><b>'+Object.keys(SCHEMAS).length+'</b>记录类型</div>'+
-    '<div class="st"><b>'+week+'</b>本周新增</div>'+
+    '<div class="st"><b>'+Object.keys(SCHEMAS).length+'</b>类型</div>'+
+    '<div class="st"><b>'+week+'</b>本周</div>'+
     '<div class="st warn"><b>'+open+'</b>待跟进</div>';
+  // 覆盖率
+  var cnt={};
+  records.forEach(function(r){ cnt[r.district]=(cnt[r.district]||0)+1; });
+  var html='';
+  ALL_DISTRICTS.forEach(function(dn){
+    var n=cnt[dn]||0;
+    html+='<span class="chip'+(n?' has':'')+'" data-d="'+dn+'">'+dn.replace(/区|县|市$/,'')+ (n? ' '+n : '') +'</span>';
+  });
+  var ek=Object.keys(cnt).filter(function(k){ return ALL_DISTRICTS.indexOf(k)<0; });
+  html+='<span class="chip" style="background:#f3f4f6;color:#b0b6bf">未覆盖 '+(11-ALL_DISTRICTS.filter(function(d){return cnt[d]}).length)+'/11</span>';
+  document.getElementById('covChips').innerHTML=html;
+  // 存储用量
+  var used=(localStorage.getItem(KEY)||'').length;
+  document.getElementById('storeBar').textContent='本机存储已用 '+(used/1024/1024).toFixed(1)+'MB / 约5MB · 照片多请定期「备份」';
 }
 
 function briefOf(r){
   var sc=SCHEMAS[r.cat]; var parts=[];
   (sc?sc.fields:[]).forEach(function(f){
-    var v=r.fields[f.k]; if(v) parts.push(f.label+'：'+v);
+    var v=r.fields[f.k]; if(v) parts.push(f.label+'：'+esc(v));
   });
   if(r.note) parts.push(esc(r.note));
   return parts.slice(0,3).join('<br>');
+}
+
+function recPhotosHtml(r){
+  if(!r.photos || !r.photos.length) return '';
+  var h='<div style="margin-top:3px">';
+  h+='<img class="thumb" src="'+r.photos[0]+'" data-ph="0">';
+  if(r.photos.length>1) h+='<span class="pcount">+'+(r.photos.length-1)+'张</span>';
+  return h+'</div>';
 }
 
 function renderRecords(){
@@ -922,17 +1005,20 @@ function renderRecords(){
       var dtCls='', dtTip='';
       if(r.cat==='重要KP' && r.fields.lastContact){
         var dd=daysAgo(r.fields.lastContact);
-        if(dd>30){ dtCls='old'; dtTip=' ⚠️'+dd+'天未联系'; }
+        if(dd>30){ dtCls='old'; dtTip='已'+dd+'天未联系'; }
       }
       html+='<div class="rec" data-i="'+i+'" style="border-left-color:'+sc.color+'">'+
         '<span class="dt '+dtCls+'" title="'+esc(dtTip)+'">'+r.date+(dtTip?'⚠️':'')+'</span>'+
         '<span class="tag" style="background:'+sc.color+'">'+sc.icon+' '+r.cat+'</span>'+
         (r.status?'<span class="stt '+statusClass(r.status)+'">'+r.status+'</span>':'')+
         '<div class="nm">'+esc(r.name)+'</div>'+
-        '<div class="nt">'+briefOf(r)+'</div></div>';
+        '<div class="nt">'+briefOf(r)+'</div>'+
+        recPhotosHtml(r)+
+        '<div class="recops"><span class="navbtn" data-nav="'+i+'">🧭 导航</span>'+
+        '<span class="pcount">'+esc(r.district)+'</span></div></div>';
     });
   });
-  box.innerHTML = html || '<div class="empty">还没有记录。<br>点「＋打点记录」→ 在地图上点位置 → 填写保存。<br>或点「📍我的位置」直接在当前位置打点。</div>';
+  box.innerHTML = html || '<div class="empty">还没有记录。<br>点「＋打点」→ 在地图上点位置 → 填写保存。<br>或点「📍定位」在当前位置打点。</div>';
   Object.keys(markers).forEach(function(k){map.removeLayer(markers[k])});
   markers={};
   records.forEach(function(r,i){
@@ -940,14 +1026,24 @@ function renderRecords(){
     if(sf && r.status!==sf) return;
     if(kw && (r.name+r.note+JSON.stringify(r.fields)+r.district).indexOf(kw)<0) return;
     var sc=SCHEMAS[r.cat]||{icon:'📌',color:'#6b7280'};
+    var popHtml='<b>'+sc.icon+' '+esc(r.name)+'</b><br>'+esc(r.district)+' · '+r.cat+(r.status?' · '+r.status:'')+
+        '<br>'+(briefOf(r)||'')+(r.date?'<br><span style="color:#9ca3af">'+r.date+'</span>':'');
+    if(r.photos && r.photos.length){ popHtml+='<br><img src="'+r.photos[0]+'" style="max-width:180px;max-height:140px;border-radius:5px;margin-top:4px">'; }
     var m=L.circleMarker([r.lat,r.lng],{radius:9,color:'#fff',weight:2,fillColor:sc.color,fillOpacity:.95})
-      .bindPopup('<b>'+sc.icon+' '+esc(r.name)+'</b><br>'+esc(r.district)+' · '+r.cat+(r.status?' · '+r.status:'')+
-        '<br>'+(briefOf(r)||'')+(r.date?'<br><span style="color:#9ca3af">'+r.date+'</span>':''));
+      .bindPopup(popHtml);
     m.addTo(map); markers[i]=m;
   });
 }
 
 document.getElementById('records').addEventListener('click',function(e){
+  var nav=e.target.getAttribute && e.target.getAttribute('data-nav');
+  if(nav!==null && e.target.classList.contains('navbtn')){ navTo(records[+nav]); return; }
+  if(e.target.classList && e.target.classList.contains('thumb')){
+    var rec=e.target.closest('.rec'); var r=records[+rec.getAttribute('data-i')];
+    var w=window.open('','_blank');
+    if(w){ w.document.write('<title>照片</title><body style="margin:0;background:#111;text-align:center">'+r.photos.map(function(p){return '<img src="'+p+'" style="max-width:100%;margin:6px 0">'}).join('')+'</body>'); }
+    return;
+  }
   var rec=e.target.closest && e.target.closest('.rec');
   if(rec){
     var i=+rec.getAttribute('data-i'); var r=records[i];
@@ -956,10 +1052,13 @@ document.getElementById('records').addEventListener('click',function(e){
     openForm(r,i);
   }
 });
+document.getElementById('covChips').addEventListener('click',function(e){
+  var d=e.target.getAttribute && e.target.getAttribute('data-d');
+  if(d && distCenters[d]) map.flyTo(distCenters[d],11);
+});
 document.getElementById('catFilter').onchange=renderRecords;
 document.getElementById('stFilter').onchange=renderRecords;
 document.getElementById('kw').oninput=renderRecords;
-// 类型下拉
 (function(){ var sel=document.getElementById('catFilter');
   Object.keys(SCHEMAS).forEach(function(k){ var o=document.createElement('option'); o.value=k; o.textContent=SCHEMAS[k].icon+' '+k; sel.appendChild(o); });
 })();
@@ -975,7 +1074,8 @@ addBtn.onclick=function(){
   if(editIdx>=0){ closeForm(); return; }
   addMode=!addMode;
   addBtn.classList.toggle('active',addMode);
-  setTip(addMode?'添加模式：在地图上点击目标位置（区县边界或空白处均可）':'',addMode);
+  addBtn.textContent = addMode ? '✓ 完成' : '＋打点';
+  setTip(addMode?'连记模式：在地图上点位置记录，保存后可继续点下一点。全部记完点「✓ 完成」退出。':'',addMode);
   formEl.style.display='none';
 };
 document.getElementById('locBtn').onclick=function(){
@@ -993,8 +1093,9 @@ document.getElementById('locBtn').onclick=function(){
 
 function pickPoint(latlng){
   pending={lat:latlng.lat,lng:latlng.lng,district:districtOf(latlng)};
+  draft=null;
   openForm(null,-1);
-  setTip('位置已选：'+pending.district+'（保存前可改类型）',true);
+  setTip('位置：'+pending.district+'，选类型填写后保存',true);
 }
 
 function fieldHtml(f,val){
@@ -1008,30 +1109,39 @@ function fieldHtml(f,val){
   return '<input data-fk="'+f.k+'" type="'+(f.type||'text')+'" value="'+esc(v)+'" placeholder="'+esc(f.ph||'')+'">';
 }
 
-function openForm(rec, idx, keepDraft){
+function photosHtml(photos){
+  var h='<div id="photoRow">';
+  (photos||[]).forEach(function(p,i){
+    h+='<div class="ph"><img src="'+p+'"><span class="rm" data-rm="'+i+'">✕</span></div>';
+  });
+  h+='<label style="display:inline-block;margin:0"><input type="file" id="fPhoto" accept="image/*" capture="environment" style="display:none"><button type="button" onclick="document.getElementById(\'fPhoto\').click()" style="padding:14px 10px;border:1px dashed #9ca3af;border-radius:6px;background:#f9fafb;cursor:pointer;font-size:12px">📷 拍照/选图</button></label>';
+  return h+'</div>';
+}
+
+function openForm(rec, idx){
   editIdx=idx;
-  var cat = rec?rec.cat:(keepDraft&&draft?draft.cat:'重点街道');
+  var cat = rec?rec.cat:('重点街道');
   var sc = SCHEMAS[cat];
   var h='<h3>'+(idx>=0?'编辑':'新增')+' · '+sc.icon+' '+esc(cat)+'</h3>';
   if(idx<0){
     var opts=''; Object.keys(SCHEMAS).forEach(function(k){ opts+='<option'+(k===cat?' selected':'')+'>'+k+'</option>'; });
     h+='<label>类型<select id="fCat">'+opts+'</select></label>';
   } else { h+='<input type="hidden" id="fCat" value="'+esc(cat)+'">'; }
-  h+='<label>名称<input id="fName" value="'+esc(rec?rec.name:(keepDraft&&draft?draft.name:''))+'" placeholder="街道/对象/点位名"></label>';
+  h+='<label>名称<input id="fName" value="'+esc(rec?rec.name:'')+'" placeholder="街道/对象/点位名"></label>';
   sc.fields.forEach(function(f){
-    var dv = rec?rec.fields[f.k] : (keepDraft&&draft? (draft.fields[f.k]||'') : (f.k==='lastContact'?today():''));
-    if(f.k==='lastContact' && !dv) dv=today();
+    var dv = rec?rec.fields[f.k] : (f.k==='lastContact'?today():'');
     h+='<label>'+f.label+fieldHtml(f, dv)+'</label>';
   });
   if(sc.status){
     var so='<select id="fStatus">'; sc.status.forEach(function(s){ so+='<option'+((rec&&rec.status===s)?' selected':'')+'>'+s+'</option>'; }); so+='</select>';
     h+='<label>状态'+so+'</label>';
   }
-  h+='<label>备注<textarea id="fNote" rows="2" placeholder="补充说明…">'+esc(rec?rec.note:(keepDraft&&draft?draft.note:''))+'</textarea></label>';
+  h+='<label>备注<textarea id="fNote" rows="2" placeholder="补充说明…">'+esc(rec?rec.note:'')+'</textarea></label>';
+  h+='<label>现场照片'+photosHtml(rec?rec.photos:[])+'</label>';
   h+='<div class="btns"><button id="fOk">保存</button><button id="fCancel">取消</button>'+(idx>=0?'<button id="fDel">删除</button>':'')+'</div>';
   formEl.innerHTML=h;
   formEl.style.display='block';
-  formEl.querySelectorAll('[data-fk]').forEach(function(){});
+  bindPhotoEvents();
   document.getElementById('fOk').onclick=function(){
     var c=document.getElementById('fCat').value;
     var name=document.getElementById('fName').value.trim();
@@ -1044,27 +1154,99 @@ function openForm(rec, idx, keepDraft){
     if(s.status) obj.status=document.getElementById('fStatus').value; else delete obj.status;
     obj.note=document.getElementById('fNote').value.trim();
     if(idx<0){ records.push(obj); } else { obj.editDate=today(); }
-    save(); closeForm(); renderRecords();
+    save();
+    var wasAdd = addMode && idx<0;
+    closeForm(!!wasAdd);
+    renderRecords();
+    if(wasAdd){ setTip('已保存「'+name+'」。继续点击地图打下一条，全部记完点「✓ 完成」',true); }
   };
-  document.getElementById('fCancel').onclick=closeForm;
-  var fcatSel=document.getElementById('fCat');
-  if(fcatSel && fcatSel.tagName==='SELECT'){
-    fcatSel.onchange=function(){
-      draft={cat:fcatSel.value, name:document.getElementById('fName').value, note:document.getElementById('fNote').value, fields:{}};
-      formEl.querySelectorAll('[data-fk]').forEach(function(el){ draft.fields[el.getAttribute('data-fk')]=el.value.trim(); });
-      openForm(null,-1,true);
-    };
-  }
+  document.getElementById('fCancel').onclick=function(){ closeForm(); };
   if(idx>=0){
     document.getElementById('fDel').onclick=function(){
       if(confirm('确定删除「'+records[idx].name+'」？')){ records.splice(idx,1); save(); closeForm(); renderRecords(); }
     };
   }
 }
-function closeForm(){
-  formEl.style.display='none'; pending=null; editIdx=-1; draft=null;
-  addMode=false; addBtn.classList.remove('active');
-  setTip('',false);
+
+var formPhotos=[];
+function bindPhotoEvents(){
+  formPhotos = Array.prototype.slice.call(formEl.querySelectorAll('#photoRow img')).map(function(img){ return img.src; });
+  var inp=document.getElementById('fPhoto');
+  if(inp) inp.onchange=function(e){
+    var files=Array.prototype.slice.call(e.target.files||[]);
+    if(!files.length) return;
+    var done=0;
+    files.forEach(function(f){
+      compressPhoto(f, function(dataUrl){
+        formPhotos.push(dataUrl);
+        done++;
+        if(done===files.length){
+          var phRow=formEl.querySelector('#photoRow');
+          var keep=[];
+          phRow.querySelectorAll('.ph').forEach(function(p){ keep.push(p.querySelector('img').src); });
+          // rebuild
+          phRow.outerHTML=photosHtml(keep.concat(formPhotos.splice(0)));
+          // merge: keep + newly added (formPhotos emptied above trick) -> simpler: rebuild from DOM after rebind
+          bindPhotoEvents();
+          // recount from DOM
+          formPhotos = Array.prototype.slice.call(formEl.querySelectorAll('#photoRow img')).map(function(img){ return img.src; });
+        }
+      });
+    });
+  };
+  formEl.querySelectorAll('#photoRow .rm').forEach(function(rm){
+    rm.onclick=function(e){
+      e.stopPropagation();
+      var i=+rm.getAttribute('data-rm');
+      formPhotos.splice(i,1);
+      formEl.querySelector('#photoRow').outerHTML=photosHtml(formPhotos);
+      bindPhotoEvents();
+    };
+  });
+  // patch 保存读取照片
+  var okBtn=document.getElementById('fOk');
+  var old=okBtn.onclick;
+  okBtn.onclick=function(){
+    formPhotos = Array.prototype.slice.call(formEl.querySelectorAll('#photoRow img')).map(function(img){ return img.src; });
+    var c=document.getElementById('fCat').value;
+    var name=document.getElementById('fName').value.trim();
+    if(!name){alert('请填名称');return;}
+    var s=SCHEMAS[c];
+    var obj = editIdx>=0 ? records[editIdx] : {lat:pending.lat,lng:pending.lng,district:pending.district,date:today()};
+    obj.cat=c; obj.name=name;
+    obj.fields={};
+    formEl.querySelectorAll('[data-fk]').forEach(function(el){ obj.fields[el.getAttribute('data-fk')]=el.value.trim(); });
+    if(s.status) obj.status=document.getElementById('fStatus').value; else delete obj.status;
+    obj.note=document.getElementById('fNote').value.trim();
+    obj.photos=formPhotos.slice();
+    if(editIdx<0){ records.push(obj); } else { obj.editDate=today(); }
+    save();
+    var wasAdd = addMode && editIdx<0;
+    closeForm(!!wasAdd);
+    renderRecords();
+    if(wasAdd){ setTip('已保存「'+name+'」。继续点击地图打下一条，全部记完点「✓ 完成」',true); }
+  };
+}
+
+function closeForm(keepAdd){
+  formEl.style.display='none'; pending=null; editIdx=-1; draft=null; formPhotos=[];
+  if(!keepAdd){
+    addMode=false; addBtn.classList.remove('active'); addBtn.textContent='＋打点';
+    setTip('',false);
+  }
+}
+
+// ============ 移动端抽屉 ============
+var expandBtn=document.getElementById('expandBtn');
+expandBtn.onclick=function(){
+  var full=document.body.classList.contains('side-full');
+  document.body.classList.toggle('side-full',!full);
+  document.body.classList.toggle('side-peek',full);
+  expandBtn.textContent=full?'▲ 展开列表':'▼ 收起列表';
+  setTimeout(function(){ map.invalidateSize(); },350);
+};
+if(window.matchMedia && window.matchMedia('(max-width: 768px)').matches){
+  document.body.classList.add('side-peek');
 }
 
 // 图层开关
@@ -1081,12 +1263,19 @@ document.getElementById('exportBtn').onclick=function(){
   a.click();
 };
 document.getElementById('csvBtn').onclick=function(){
-  var cols=['date','district','cat','name','status','note','lat','lng'];
+  var cols=['date','district','cat','name','status','note','lat','lng','photos'];
   Object.keys(SCHEMAS).forEach(function(c){ SCHEMAS[c].fields.forEach(function(f){ if(cols.indexOf(f.k)<0) cols.push(f.k); }); });
   var rows=[cols.join(',')];
   records.forEach(function(r){
     rows.push(cols.map(function(c){
-      var v = c==='cat'?r.cat:(c==='lat'?r.lat:(c==='lng'?r.lng:(c==='district'?r.district:(c==='note'?r.note:(r.fields[c]!=null?r.fields[c]:(r[c]||''))))));
+      var v;
+      if(c==='cat') v=r.cat;
+      else if(c==='lat') v=r.lat;
+      else if(c==='lng') v=r.lng;
+      else if(c==='district') v=r.district;
+      else if(c==='note') v=r.note;
+      else if(c==='photos') v=(r.photos||[]).length+'张(见备份JSON)';
+      else v=(r.fields[c]!=null?r.fields[c]:(r[c]||''));
       return '"'+String(v==null?'':v).replace(/"/g,'""')+'"';
     }).join(','));
   });
@@ -1104,7 +1293,7 @@ document.getElementById('importFile').onchange=function(e){
     try{
       var arr=JSON.parse(rd.result);
       if(!Array.isArray(arr)) throw 0;
-      arr.forEach(function(r){ if(!r.fields) r.fields={}; });
+      arr.forEach(function(r){ if(!r.fields) r.fields={}; if(!r.photos) r.photos=[]; });
       records=records.concat(arr);
       save(); renderRecords(); alert('导入成功：'+arr.length+'条');
     }catch(ex){alert('文件格式不对')}
