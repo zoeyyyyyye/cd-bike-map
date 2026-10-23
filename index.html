@@ -1240,7 +1240,12 @@ function openForm(rec, idx){
   document.getElementById('fCancel').onclick=function(){ closeForm(); };
   if(idx>=0){
     document.getElementById('fDel').onclick=function(){
-      if(confirm('确定删除「'+records[idx].name+'」？')){ records.splice(idx,1); save(); closeForm(); renderRecords(); }
+      if(confirm('确定删除「'+records[idx].name+'」？')){
+        var k=recKey(records[idx]);
+        var t=loadTombstones(); if(t.indexOf(k)<0) t.push(k);
+        localStorage.setItem('cd_map_tomb', JSON.stringify(t));
+        records.splice(idx,1); save(); closeForm(); renderRecords(); syncSoon();
+      }
     };
   }
 }
@@ -1391,9 +1396,8 @@ function showCfg(){
     '<h3 style="margin:0 0 8px;font-size:15px">☁ 云同步设置</h3>'+
     '<p style="margin:0 0 10px;color:#6b7280;font-size:12px">用 GitHub Secret Gist 做云存储：私密、免费、链接不可搜索。首次配置后，任意设备点「☁同步」即可自动双向合并。</p>'+
     '<label style="display:block;margin:6px 0">GitHub 令牌（ghp_ 开头，勾 gist 权限）<input id="cfgToken" type="password" value="'+esc(c.token||'')+'" style="width:95%;padding:6px;border:1px solid #cbd5e1;border-radius:5px;margin-top:2px"></label>'+
-    '<label style="display:block;margin:6px 0">Gist ID<input id="cfgGist" value="'+esc(c.gistId||DEFAULT_GIST)+'" style="width:95%;padding:6px;border:1px solid #cbd5e1;border-radius:5px;margin-top:2px;background:#f8fafc"></label>'+
+    '<label style="display:block;margin:6px 0">Gist ID（已统一，勿改）<input id="cfgGist" value="'+esc(c.gistId||DEFAULT_GIST)+'" style="width:95%;padding:6px;border:1px solid #cbd5e1;border-radius:5px;margin-top:2px;background:#f8fafc" readonly></label>'+
     '<div style="margin:10px 0 4px">'+
-    '<button id="cfgInit" style="padding:7px 12px;background:#2563eb;color:#fff;border:none;border-radius:6px;margin-right:6px">① 初始化云端</button>'+
     '<button id="cfgSave" style="padding:7px 12px;background:#16a34a;color:#fff;border:none;border-radius:6px">保存</button>'+
     '<button id="cfgClose" style="padding:7px 12px;background:#e5e7eb;border:none;border-radius:6px;float:right">关闭</button></div>'+
     '<div id="cfgMsg" style="font-size:12px;color:#6b7280;margin-top:8px"></div>'+
@@ -1401,24 +1405,10 @@ function showCfg(){
   var d=wrap.firstChild; document.body.appendChild(d);
   document.getElementById('cfgClose').onclick=function(){ d.remove(); };
   document.getElementById('cfgSave').onclick=function(){
-    var t=document.getElementById('cfgToken').value.trim(), g=document.getElementById('cfgGist').value.trim();
+    var t=document.getElementById('cfgToken').value.trim(), g=(getSyncCfg()||{}).gistId||DEFAULT_GIST;
     if(!t){ document.getElementById('cfgMsg').textContent='令牌不能为空'; return; }
     setSyncCfg({token:t, gistId:g});
     document.getElementById('cfgMsg').textContent='✓ 已保存到本机';
-  };
-  document.getElementById('cfgInit').onclick=function(){
-    var msg=document.getElementById('cfgMsg');
-    msg.textContent='正在创建云端存储…';
-    var t=document.getElementById('cfgToken').value.trim();
-    if(!t){ msg.textContent='令牌不能为空'; return; }
-    fetch('https://api.github.com/gists',{method:'POST',headers:{'Authorization':'token '+t},
-      body:JSON.stringify({description:'cd-bike-map-sync', files:{'data.json':{content:JSON.stringify(records)}}})})
-    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
-    .then(function(g){
-      document.getElementById('cfgGist').value=g.id;
-      setSyncCfg({token:t, gistId:g.id});
-      msg.innerHTML='✓ 云端已创建，本机 '+records.length+' 条已上传。<br>其他设备：⚙里填同一令牌和这个 Gist ID：<b>'+g.id+'</b>';
-    }).catch(function(e){ msg.textContent='创建失败：'+e.message+'（检查令牌是否勾了 gist 权限）'; });
   };
 }
 document.getElementById('cfgBtn').onclick=showCfg;
@@ -1456,16 +1446,23 @@ syncBtn.onclick=function(){
   .then(function(g){
     var content = g.files && g.files['data.json'] ? g.files['data.json'].content : null;
     var remote = content ? JSON.parse(content) : [];
-    if(!Array.isArray(remote)) remote=[];
     var before = records.length;
-    records = mergeRecords(records, remote); save(); renderRecords();
+    var tombArr = (Array.isArray(remote) ? [] : (remote._tomb || [])).slice();
+    try{ loadTombstones().forEach(function(k){ if(tombArr.indexOf(k)<0) tombArr.push(k); }); }catch(e){}
+    var tomb = {}; tombArr.forEach(function(k){ tomb[k]=true; });
+    var remoteRecs = Array.isArray(remote) ? remote : (remote.records || []);
+    remoteRecs = remoteRecs.filter(function(r){ return !tomb[recKey(r)]; });
+    var localAlive = records.filter(function(r){ return !tomb[recKey(r)]; });
+    records = mergeRecords(localAlive, remoteRecs); save(); renderRecords();
+    var payload = {records: records, _tomb: tombArr, _ts: new Date().toISOString()};
     return fetch('https://api.github.com/gists/'+c.gistId, {method:'PATCH',
       headers:{'Authorization':'token '+c.token},
-      body:JSON.stringify({files:{'data.json':{content:JSON.stringify(records)}}})})
+      body:JSON.stringify({files:{'data.json':{content:JSON.stringify(payload)}}})})
     .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); })
     .then(function(){
       syncBtn.disabled=false; syncBtn.textContent='☁同步';
-      alert('✓ 同步完成\n云端 '+remote.length+' 条 + 本机 '+before+' 条 → 合并后 '+records.length+' 条');
+      localStorage.setItem('cd_map_tomb', JSON.stringify(tombArr));
+      alert('✓ 同步完成\n云端 '+remoteRecs.length+' 条 + 本机 '+before+' 条 → 合并后 '+records.length+' 条');
     });
   })
   .catch(function(e){
@@ -1473,6 +1470,9 @@ syncBtn.onclick=function(){
     alert('同步失败：'+e.message+'\n检查令牌有效性（⚙）或稍后重试。');
   });
 };
+var _syncTimer=null;
+function syncSoon(){ if(_syncTimer) return; _syncTimer=setTimeout(function(){ _syncTimer=null; var c=getSyncCfg(); if(c&&c.token&&c.gistId){ try{ syncBtn.onclick(); }catch(e){} } }, 15000); }
+function loadTombstones(){ try{ return JSON.parse(localStorage.getItem('cd_map_tomb')||'[]'); }catch(e){ return []; } }
 
 renderRecords();
 </script>
