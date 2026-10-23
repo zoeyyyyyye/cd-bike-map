@@ -1433,7 +1433,7 @@ function showCfg(){
   var wrap=document.createElement('div');
   wrap.innerHTML='<div style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:4000;display:flex;align-items:center;justify-content:center;padding:16px">'+
     '<div style="background:#fff;border-radius:12px;padding:18px 16px;max-width:340px;width:100%;font-size:13px;line-height:1.6">'+
-    '<h3 style="margin:0 0 8px;font-size:15px">☁ 云同步设置</h3>'+
+    '<h3 style="margin:0 0 8px;font-size:15px">☁ 云同步设置 <span style="float:right;font-size:11px;color:#9ca3af">v8.3</span></h3>'+
     '<p style="margin:0 0 10px;color:#6b7280;font-size:12px">用 GitHub Secret Gist 做云存储：私密、免费、链接不可搜索。首次配置后，任意设备点「☁同步」即可自动双向合并。</p>'+
     '<label style="display:block;margin:6px 0">GitHub 令牌（ghp_ 开头，勾 gist 权限）<input id="cfgToken" type="password" value="'+esc(c.token||'')+'" style="width:95%;padding:6px;border:1px solid #cbd5e1;border-radius:5px;margin-top:2px"></label>'+
     '<label style="display:block;margin:6px 0">Gist ID（已统一，勿改）<input id="cfgGist" value="'+esc(c.gistId||DEFAULT_GIST)+'" style="width:95%;padding:6px;border:1px solid #cbd5e1;border-radius:5px;margin-top:2px;background:#f8fafc" readonly></label>'+
@@ -1507,7 +1507,7 @@ syncBtn.onclick=function(){
   })
   .catch(function(e){
     syncBtn.disabled=false; syncBtn.textContent='☁同步';
-    alert('同步失败：'+e.message+'\n检查令牌有效性（⚙）或稍后重试。');
+    alert('同步失败：'+e.message+'\n云端：'+String((getSyncCfg()||{}).gistId||'').slice(0,8)+'（若非 ed861aa5 说明页面还是旧版，请清缓存重开）\n检查令牌有效性（⚙）或稍后重试。');
   });
 };
 var _syncTimer=null;
