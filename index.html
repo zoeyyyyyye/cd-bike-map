@@ -939,6 +939,66 @@ function navTo(r){
   window.open(url,'_blank');
 }
 
+// ============ WGS-84 → GCJ-02（火星坐标）转换 ============
+function wgs2gcj(lng, lat){
+  var a=6378245.0, ee=0.00669342162296594323;
+  function tLat(x,y){
+    var r=-100+2*x+3*y+0.2*y*y+0.1*x*y+0.2*Math.sqrt(Math.abs(x));
+    r+=(20*Math.sin(6*x*Math.PI)+20*Math.sin(2*x*Math.PI))*2/3;
+    r+=(20*Math.sin(y*Math.PI)+40*Math.sin(y/3*Math.PI))*2/3;
+    r+=(160*Math.sin(y/12*Math.PI)+320*Math.sin(y*Math.PI/30))*2/3;
+    return r;
+  }
+  function tLng(x,y){
+    var r=300+x+2*y+0.1*x*x+0.1*x*y+0.1*Math.sqrt(Math.abs(x));
+    r+=(20*Math.sin(6*x*Math.PI)+20*Math.sin(2*x*Math.PI))*2/3;
+    r+=(20*Math.sin(x*Math.PI)+40*Math.sin(x/3*Math.PI))*2/3;
+    r+=(160*Math.sin(x/12*Math.PI)+320*Math.sin(x*Math.PI/30))*2/3;
+    return r;
+  }
+  var dLat=tLat(lng-105,lat-35), dLng=tLng(lng-105,lat-35);
+  dLng=tLng(lng-105,lat-35);
+  var radLat=lat/180*Math.PI;
+  var magic=Math.sin(radLat); magic=1-ee*magic*magic;
+  var sq=Math.sqrt(magic);
+  dLat=(dLat*180)/((a*(1-ee))/(magic*sq)*Math.PI);
+  dLng=(dLng*180)/(a/sq*Math.cos(radLat)*Math.PI);
+  return [lng+dLng, lat+dLat];
+}
+
+// ============ 定位 ============
+var meMarker=null, meCircle=null;
+function showMe(lat,lng,acc){
+  if(meMarker){map.removeLayer(meMarker); meMarker=null;}
+  if(meCircle){map.removeLayer(meCircle); meCircle=null;}
+  meCircle=L.circle([lat,lng],{radius:Math.max(acc||50,25),color:'#3b82f6',weight:1,fillColor:'#60a5fa',fillOpacity:.12}).addTo(map);
+  meMarker=L.circleMarker([lat,lng],{radius:10,color:'#fff',weight:3,fillColor:'#2563eb',fillOpacity:1}).addTo(map);
+  var accTxt=acc?'（精度±'+Math.round(acc)+'米）':'';
+  meMarker.bindPopup('<b>📍 我在这里</b>'+accTxt+'<br><button onclick="pickPoint({lat:'+lat+',lng:'+lng+'})" style="margin-top:5px;padding:5px 12px;background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer">＋ 在此打点</button>');
+  map.flyTo([lat,lng], Math.max(map.getZoom(),15));
+  setTimeout(function(){ if(meMarker) meMarker.openPopup(); },700);
+}
+var locBtn=document.getElementById('locBtn');
+locBtn.onclick=function(){
+  if(!navigator.geolocation){ alert('此浏览器不支持定位，请直接点地图打点'); return; }
+  setTip('正在定位…GPS需几秒，室内可能不准，建议在室外空旷处',true);
+  locBtn.disabled=true; locBtn.textContent='⏳定位中';
+  navigator.geolocation.getCurrentPosition(function(p){
+    locBtn.disabled=false; locBtn.textContent='📍定位';
+    setTip('',false);
+    var c=wgs2gcj(p.coords.longitude, p.coords.latitude);
+    showMe(c[1], c[0], p.coords.accuracy);
+    if(addMode){ pickPoint({lat:c[1],lng:c[0]}); }
+  },function(err){
+    locBtn.disabled=false; locBtn.textContent='📍定位';
+    setTip('',false);
+    var m = err.code===1 ? '你拒绝了定位权限。请到 手机设置→隐私→定位服务（或浏览器网站设置）里允许当前网站使用定位，然后重试。'
+      : (err.code===3 ? '定位超时，GPS信号弱。建议到室外开阔处重试，或直接在地图上点位置打点。'
+      : '定位失败：'+err.message+'。可以直接在地图上点位置打点。');
+    alert(m);
+  },{enableHighAccuracy:true,timeout:15000,maximumAge:30000});
+};
+
 var markers = {};
 function renderStats(){
   var open=0, week=0;
@@ -1077,18 +1137,6 @@ addBtn.onclick=function(){
   addBtn.textContent = addMode ? '✓ 完成' : '＋打点';
   setTip(addMode?'连记模式：在地图上点位置记录，保存后可继续点下一点。全部记完点「✓ 完成」退出。':'',addMode);
   formEl.style.display='none';
-};
-document.getElementById('locBtn').onclick=function(){
-  if(!navigator.geolocation){ alert('浏览器不支持定位'); return; }
-  setTip('正在获取定位…',true);
-  navigator.geolocation.getCurrentPosition(function(p){
-    setTip('',false);
-    pickPoint({lat:p.coords.latitude,lng:p.coords.longitude});
-    map.flyTo([p.coords.latitude,p.coords.longitude],14);
-  },function(err){
-    setTip('',false);
-    alert('定位失败：'+err.message+'。可以在地图上手动点位置打点。');
-  },{enableHighAccuracy:true,timeout:10000});
 };
 
 function pickPoint(latlng){
