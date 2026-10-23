@@ -1479,10 +1479,10 @@ syncBtn.onclick=function(){
     setSyncCfg({token:t, gistId:DEFAULT_GIST});
     c=getSyncCfg();
   }
-  if(!c.gistId){ setSyncCfg({token:c.token, gistId:DEFAULT_GIST}); c=getSyncCfg(); }
+  if(c.gistId!==DEFAULT_GIST){ c.gistId=DEFAULT_GIST; setSyncCfg(c); } // 旧设备存的已删除gist自动迁移到统一云端
   syncBtn.disabled=true; syncBtn.textContent='⏳同步中';
   fetch('https://api.github.com/gists/'+c.gistId, {headers:{'Authorization':'token '+c.token}})
-  .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+  .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status+'（拉取云端失败：若反复出现请点⚙重配令牌）'); return r.json(); })
   .then(function(g){
     var content = g.files && g.files['data.json'] ? g.files['data.json'].content : null;
     var remote = content ? JSON.parse(content) : [];
@@ -1498,7 +1498,7 @@ syncBtn.onclick=function(){
     return fetch('https://api.github.com/gists/'+c.gistId, {method:'PATCH',
       headers:{'Authorization':'token '+c.token},
       body:JSON.stringify({files:{'data.json':{content:JSON.stringify(payload)}}})})
-    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); })
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status+(r.status===404?'（写入失败：令牌缺gist权限或已过期，请点⚙重新粘贴同步令牌）':'（写入失败）')); })
     .then(function(){
       syncBtn.disabled=false; syncBtn.textContent='☁同步';
       localStorage.setItem('cd_map_tomb', JSON.stringify(tombArr));
