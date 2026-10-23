@@ -765,6 +765,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
     <div class="toolbar">
       <button id="addBtn" class="primary">＋打点</button>
       <button id="locBtn">📍定位</button>
+      <button id="syncBtn">☁同步</button>
+      <button id="cfgBtn">⚙</button>
       <button id="exportBtn">备份</button>
       <button id="csvBtn">CSV</button>
       <button id="importBtn">导入</button>
@@ -1374,6 +1376,95 @@ document.getElementById('importFile').onchange=function(e){
     }catch(ex){alert('文件格式不对')}
   };
   rd.readAsText(f);
+};
+
+// ============ 云同步（GitHub Secret Gist） ============
+var SYNC_CFG_KEY='cd_map_sync_cfg';
+function getSyncCfg(){ try{ return JSON.parse(localStorage.getItem(SYNC_CFG_KEY)||'null'); }catch(e){ return null; } }
+function setSyncCfg(c){ localStorage.setItem(SYNC_CFG_KEY, JSON.stringify(c)); }
+function showCfg(){
+  var c=getSyncCfg()||{};
+  var wrap=document.createElement('div');
+  wrap.innerHTML='<div style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:4000;display:flex;align-items:center;justify-content:center;padding:16px">'+
+    '<div style="background:#fff;border-radius:12px;padding:18px 16px;max-width:340px;width:100%;font-size:13px;line-height:1.6">'+
+    '<h3 style="margin:0 0 8px;font-size:15px">☁ 云同步设置</h3>'+
+    '<p style="margin:0 0 10px;color:#6b7280;font-size:12px">用 GitHub Secret Gist 做云存储：私密、免费、链接不可搜索。首次配置后，任意设备点「☁同步」即可自动双向合并。</p>'+
+    '<label style="display:block;margin:6px 0">GitHub 令牌（ghp_ 开头，勾 gist 权限）<input id="cfgToken" type="password" value="'+esc(c.token||'')+'" style="width:95%;padding:6px;border:1px solid #cbd5e1;border-radius:5px;margin-top:2px"></label>'+
+    '<label style="display:block;margin:6px 0">Gist ID（首次可留空，保存后点「① 初始化云端」自动创建）<input id="cfgGist" value="'+esc(c.gistId||'')+'" style="width:95%;padding:6px;border:1px solid #cbd5e1;border-radius:5px;margin-top:2px"></label>'+
+    '<div style="margin:10px 0 4px">'+
+    '<button id="cfgInit" style="padding:7px 12px;background:#2563eb;color:#fff;border:none;border-radius:6px;margin-right:6px">① 初始化云端</button>'+
+    '<button id="cfgSave" style="padding:7px 12px;background:#16a34a;color:#fff;border:none;border-radius:6px">保存</button>'+
+    '<button id="cfgClose" style="padding:7px 12px;background:#e5e7eb;border:none;border-radius:6px;float:right">关闭</button></div>'+
+    '<div id="cfgMsg" style="font-size:12px;color:#6b7280;margin-top:8px"></div>'+
+    '</div></div>';
+  var d=wrap.firstChild; document.body.appendChild(d);
+  document.getElementById('cfgClose').onclick=function(){ d.remove(); };
+  document.getElementById('cfgSave').onclick=function(){
+    var t=document.getElementById('cfgToken').value.trim(), g=document.getElementById('cfgGist').value.trim();
+    if(!t){ document.getElementById('cfgMsg').textContent='令牌不能为空'; return; }
+    setSyncCfg({token:t, gistId:g});
+    document.getElementById('cfgMsg').textContent='✓ 已保存到本机';
+  };
+  document.getElementById('cfgInit').onclick=function(){
+    var msg=document.getElementById('cfgMsg');
+    msg.textContent='正在创建云端存储…';
+    var t=document.getElementById('cfgToken').value.trim();
+    if(!t){ msg.textContent='令牌不能为空'; return; }
+    fetch('https://api.github.com/gists',{method:'POST',headers:{'Authorization':'token '+t},
+      body:JSON.stringify({description:'cd-bike-map-sync', files:{'data.json':{content:JSON.stringify(records)}}})})
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .then(function(g){
+      document.getElementById('cfgGist').value=g.id;
+      setSyncCfg({token:t, gistId:g.id});
+      msg.innerHTML='✓ 云端已创建，本机 '+records.length+' 条已上传。<br>其他设备：⚙里填同一令牌和这个 Gist ID：<b>'+g.id+'</b>';
+    }).catch(function(e){ msg.textContent='创建失败：'+e.message+'（检查令牌是否勾了 gist 权限）'; });
+  };
+}
+document.getElementById('cfgBtn').onclick=showCfg;
+
+function recKey(r){ return (Number(r.lat).toFixed(6)+','+Number(r.lng).toFixed(6)+'|'+r.cat+'|'+r.name); }
+function mergeRecords(local, remote){
+  var seen={}, merged=[];
+  remote.forEach(function(r){ seen[recKey(r)]=r; merged.push(r); });
+  local.forEach(function(r){
+    if(!seen[recKey(r)]){ merged.push(r); }
+    else{
+      var old=seen[recKey(r)];
+      var dOld=old.editDate||old.date||'', dNew=r.editDate||r.date||'';
+      if(dNew>dOld || ((r.photos||[]).length>(old.photos||[]).length)){
+        var idx=merged.indexOf(old); merged[idx]=r;
+      }
+    }
+  });
+  return merged;
+}
+var syncBtn=document.getElementById('syncBtn');
+syncBtn.onclick=function(){
+  var c=getSyncCfg();
+  if(!c||!c.token){ showCfg(); return; }
+  if(!c.gistId){ alert('还没初始化云端。⚙里填令牌后点「① 初始化云端」'); showCfg(); return; }
+  syncBtn.disabled=true; syncBtn.textContent='⏳同步中';
+  fetch('https://api.github.com/gists/'+c.gistId, {headers:{'Authorization':'token '+c.token}})
+  .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+  .then(function(g){
+    var content = g.files && g.files['data.json'] ? g.files['data.json'].content : null;
+    var remote = content ? JSON.parse(content) : [];
+    if(!Array.isArray(remote)) remote=[];
+    var before = records.length;
+    records = mergeRecords(records, remote); save(); renderRecords();
+    return fetch('https://api.github.com/gists/'+c.gistId, {method:'PATCH',
+      headers:{'Authorization':'token '+c.token},
+      body:JSON.stringify({files:{'data.json':{content:JSON.stringify(records)}}})})
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); })
+    .then(function(){
+      syncBtn.disabled=false; syncBtn.textContent='☁同步';
+      alert('✓ 同步完成\n云端 '+remote.length+' 条 + 本机 '+before+' 条 → 合并后 '+records.length+' 条');
+    });
+  })
+  .catch(function(e){
+    syncBtn.disabled=false; syncBtn.textContent='☁同步';
+    alert('同步失败：'+e.message+'\n检查令牌有效性（⚙）或稍后重试。');
+  });
 };
 
 renderRecords();
