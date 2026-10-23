@@ -1382,6 +1382,7 @@ document.getElementById('importFile').onchange=function(e){
 var SYNC_CFG_KEY='cd_map_sync_cfg';
 function getSyncCfg(){ try{ return JSON.parse(localStorage.getItem(SYNC_CFG_KEY)||'null'); }catch(e){ return null; } }
 function setSyncCfg(c){ localStorage.setItem(SYNC_CFG_KEY, JSON.stringify(c)); }
+var DEFAULT_GIST='ed861aa5d0f04bd6f0c29463e6155890'; // 已初始化的云端（sync token only）
 function showCfg(){
   var c=getSyncCfg()||{};
   var wrap=document.createElement('div');
@@ -1390,7 +1391,7 @@ function showCfg(){
     '<h3 style="margin:0 0 8px;font-size:15px">☁ 云同步设置</h3>'+
     '<p style="margin:0 0 10px;color:#6b7280;font-size:12px">用 GitHub Secret Gist 做云存储：私密、免费、链接不可搜索。首次配置后，任意设备点「☁同步」即可自动双向合并。</p>'+
     '<label style="display:block;margin:6px 0">GitHub 令牌（ghp_ 开头，勾 gist 权限）<input id="cfgToken" type="password" value="'+esc(c.token||'')+'" style="width:95%;padding:6px;border:1px solid #cbd5e1;border-radius:5px;margin-top:2px"></label>'+
-    '<label style="display:block;margin:6px 0">Gist ID（首次可留空，保存后点「① 初始化云端」自动创建）<input id="cfgGist" value="'+esc(c.gistId||'')+'" style="width:95%;padding:6px;border:1px solid #cbd5e1;border-radius:5px;margin-top:2px"></label>'+
+    '<label style="display:block;margin:6px 0">Gist ID<input id="cfgGist" value="'+esc(c.gistId||DEFAULT_GIST)+'" style="width:95%;padding:6px;border:1px solid #cbd5e1;border-radius:5px;margin-top:2px;background:#f8fafc"></label>'+
     '<div style="margin:10px 0 4px">'+
     '<button id="cfgInit" style="padding:7px 12px;background:#2563eb;color:#fff;border:none;border-radius:6px;margin-right:6px">① 初始化云端</button>'+
     '<button id="cfgSave" style="padding:7px 12px;background:#16a34a;color:#fff;border:none;border-radius:6px">保存</button>'+
@@ -1441,8 +1442,14 @@ function mergeRecords(local, remote){
 var syncBtn=document.getElementById('syncBtn');
 syncBtn.onclick=function(){
   var c=getSyncCfg();
-  if(!c||!c.token){ showCfg(); return; }
-  if(!c.gistId){ alert('还没初始化云端。⚙里填令牌后点「① 初始化云端」'); showCfg(); return; }
+  if(!c||!c.token){
+    var t=prompt('首次使用云同步，请粘贴 GitHub 令牌（ghp_ 开头，仅需 gist 权限）：');
+    if(!t) return;
+    t=t.trim();
+    setSyncCfg({token:t, gistId:DEFAULT_GIST});
+    c=getSyncCfg();
+  }
+  if(!c.gistId){ setSyncCfg({token:c.token, gistId:DEFAULT_GIST}); c=getSyncCfg(); }
   syncBtn.disabled=true; syncBtn.textContent='⏳同步中';
   fetch('https://api.github.com/gists/'+c.gistId, {headers:{'Authorization':'token '+c.token}})
   .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
