@@ -979,6 +979,29 @@ function showMe(lat,lng,acc){
   setTimeout(function(){ if(meMarker) meMarker.openPopup(); },700);
 }
 var locBtn=document.getElementById('locBtn');
+function isWebview(){
+  var ua=navigator.userAgent;
+  return /Daxiang|Neixin|wxwork|MicroMessenger|Weibo|MQQBrowser\/(?![\.a-z])|DingTalk|Feishu|Lark/i.test(ua);
+}
+function webviewBanner(){
+  if(sessionStorage.getItem('wbHintShown')) return;
+  sessionStorage.setItem('wbHintShown','1');
+  var d=document.createElement('div');
+  d.style.cssText='position:fixed;top:0;left:0;right:0;z-index:3000;background:#fef3c7;color:#92400e;font-size:13px;padding:10px 14px;line-height:1.6;box-shadow:0 2px 8px rgba(0,0,0,.15)';
+  d.innerHTML='<b>⚠️ 你在大象内置浏览器里打开</b><br>定位用不了、数据也可能被清空。请点右上角「···」→复制链接，<b>用 Safari 打开</b>，并把网页添加到主屏幕。<button id="wbCopy" style="margin-top:6px;padding:5px 14px;background:#b45309;color:#fff;border:none;border-radius:6px;font-size:13px">复制链接</button> <button id="wbClose" style="padding:5px 14px;background:#fff;border:1px solid #d97706;color:#92400e;border-radius:6px;font-size:13px">知道了</button>';
+  document.body.appendChild(d);
+  d.querySelector('#wbCopy').onclick=function(){
+    var self=this;
+    navigator.clipboard.writeText(location.href).then(function(){ self.textContent='已复制'; setTimeout(function(){d.remove();},600); },
+      function(){
+        var t=document.createElement('textarea'); t.value=location.href; document.body.appendChild(t); t.select();
+        try{ document.execCommand('copy'); self.textContent='已复制'; }catch(e){ prompt('长按复制：', location.href); }
+        t.remove(); setTimeout(function(){d.remove();},600);
+      });
+  };
+  d.querySelector('#wbClose').onclick=function(){ d.remove(); };
+}
+if(isWebview()){ webviewBanner(); }
 locBtn.onclick=function(){
   if(!navigator.geolocation){ alert('此浏览器不支持定位，请直接点地图打点'); return; }
   setTip('正在定位…GPS需几秒，室内可能不准，建议在室外空旷处',true);
@@ -992,6 +1015,10 @@ locBtn.onclick=function(){
   },function(err){
     locBtn.disabled=false; locBtn.textContent='📍定位';
     setTip('',false);
+    if(isWebview()){
+      alert('你在大象内置浏览器里，定位接口被禁用，任何重试都没用。\n\n解决办法：\n1. 长按大象里的链接复制\n2. 用 Safari 打开\n3. Safari 里点定位→允许');
+      return;
+    }
     var m = err.code===1 ? '你拒绝了定位权限。请到 手机设置→隐私→定位服务（或浏览器网站设置）里允许当前网站使用定位，然后重试。'
       : (err.code===3 ? '定位超时，GPS信号弱。建议到室外开阔处重试，或直接在地图上点位置打点。'
       : '定位失败：'+err.message+'。可以直接在地图上点位置打点。');
