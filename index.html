@@ -693,8 +693,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
   .chip{font-size:10.5px;padding:2.5px 8px;border-radius:11px;background:#f1f2f4;color:#9ca3af;cursor:pointer;user-select:none;transition:all .15s}
   .chip:active{transform:scale(.95)}
   .chip.has{background:#dcfce7;color:#15803d;font-weight:600}
-  .toolbar{padding:8px 12px;border-bottom:1px solid var(--line);display:flex;gap:4px;flex-wrap:wrap}
-  .toolbar button{padding:5.5px 8px;border:1px solid #d5d9e0;border-radius:8px;background:#fff;font-size:12px;cursor:pointer;box-shadow:var(--shadow);transition:all .15s;color:var(--ink2);flex:1;min-width:0;white-space:nowrap}
+  .toolbar{padding:8px 12px;border-bottom:1px solid var(--line);display:flex;gap:5px;flex-wrap:wrap}
+  .toolbar button{padding:6px 10px;border:1px solid #d5d9e0;border-radius:8px;background:#fff;font-size:12.5px;cursor:pointer;box-shadow:var(--shadow);transition:all .15s;color:var(--ink2);white-space:nowrap;line-height:1.4}
   .toolbar button:active{transform:scale(.96)}
   .toolbar button.primary{background:var(--brand);color:var(--ink);border-color:var(--brand-dark);font-weight:700;box-shadow:0 2px 6px rgba(230,184,0,.35)}
   .toolbar button.active{background:#1e40af;color:#fff;border-color:#1e40af}
@@ -770,7 +770,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
     .filters input{width:88px}
     .filters input#kw{width:88px}
     .legend{display:none}
-    .toolbar{padding:7px 12px}
+    .toolbar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding:8px 12px;-webkit-overflow-scrolling:touch}
+    .toolbar::-webkit-scrollbar{display:none}
+    .toolbar button{flex-shrink:0}
   }
 </style>
 </head>
@@ -864,7 +866,8 @@ var SCHEMAS = {
   ]}
 };
 
-var map = L.map('map',{center:[30.66,104.05], zoom:9, tap:true});
+var isMobileM = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+var map = L.map('map',{center:[30.66,104.05], zoom:9, tap:true, zoomControl:!isMobileM});
 L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',
   {subdomains:'1234', attribution:'高德底图'}).addTo(map);
 
