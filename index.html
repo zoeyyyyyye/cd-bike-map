@@ -669,84 +669,108 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
 </style>
 <style>
-  html,body{margin:0;height:100%;font-family:"PingFang SC","Microsoft YaHei",sans-serif;background:#f2f4f7;overscroll-behavior:none}
+  :root{
+    --brand:#ffd100; --brand-dark:#e6b800; --ink:#111827; --ink2:#4b5563;
+    --line:#e8eaef; --bg:#f4f5f7; --blue:#2563eb; --red:#dc2626; --green:#16a34a;
+    --shadow:0 1px 3px rgba(17,24,39,.08),0 1px 2px rgba(17,24,39,.04);
+    --shadow-lg:0 4px 16px rgba(17,24,39,.12);
+  }
+  html,body{margin:0;height:100%;font-family:"PingFang SC","Microsoft YaHei",-apple-system,sans-serif;background:var(--bg);overscroll-behavior:none}
   #app{display:flex;height:100%}
-  #map{flex:1;height:100%}
-  #side{width:340px;background:#fff;box-shadow:-2px 0 10px rgba(0,0,0,.10);display:flex;flex-direction:column;z-index:1000}
-  #side header{padding:8px 14px 6px;border-bottom:1px solid #eee}
-  #side header h1{margin:0;font-size:15px;display:inline}
-  #side header small{color:#888;font-size:11px;display:block;margin-top:2px}
-  .stats{display:flex;gap:6px;padding:7px 12px;border-bottom:1px solid #eee;font-size:12px}
-  .stats .st{flex:1;background:#f5f7fb;border-radius:8px;padding:5px 4px;text-align:center}
-  .stats .st b{display:block;font-size:15px;color:#1d4ed8}
-  .stats .st.warn b{color:#dc2626}
-  #coverage{padding:6px 12px 8px;border-bottom:1px solid #eee}
-  #coverage .cov-title{font-size:11px;color:#6b7280;margin-bottom:4px}
+  #map{flex:1;height:100%;background:#e8ecef}
+  #side{width:344px;background:#fff;box-shadow:-2px 0 14px rgba(0,0,0,.10);display:flex;flex-direction:column;z-index:1000}
+  #side header{padding:11px 16px 9px;border-bottom:1px solid var(--line);background:linear-gradient(135deg,#111827 0%,#1f2937 100%);margin:0 -0px}
+  #side header h1{margin:0;font-size:15.5px;display:inline;letter-spacing:.5px;color:#fff}
+  #side header h1::before{content:'';display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--brand);margin-right:8px;vertical-align:1px}
+  #side header small{color:#9ca3af;font-size:10.5px;display:block;margin-top:3px}
+  .stats{display:flex;gap:7px;padding:9px 14px;border-bottom:1px solid var(--line);font-size:11.5px;background:#fff}
+  .stats .st{flex:1;background:var(--bg);border-radius:10px;padding:6px 4px;text-align:center;box-shadow:var(--shadow)}
+  .stats .st b{display:block;font-size:16px;color:var(--ink)}
+  .stats .st.warn b{color:var(--red)}
+  #coverage{padding:7px 14px 9px;border-bottom:1px solid var(--line)}
+  #coverage .cov-title{font-size:10.5px;color:#9ca3af;margin-bottom:5px;font-weight:600;letter-spacing:.5px}
   #coverage .chips{display:flex;flex-wrap:wrap;gap:4px}
-  .chip{font-size:11px;padding:2px 7px;border-radius:10px;background:#eef2f7;color:#9ca3af;cursor:pointer;user-select:none}
+  .chip{font-size:10.5px;padding:2.5px 8px;border-radius:11px;background:#f1f2f4;color:#9ca3af;cursor:pointer;user-select:none;transition:all .15s}
+  .chip:active{transform:scale(.95)}
   .chip.has{background:#dcfce7;color:#15803d;font-weight:600}
-  .toolbar{padding:7px 12px;border-bottom:1px solid #eee;display:flex;gap:5px;flex-wrap:wrap}
-  .toolbar button{padding:5px 9px;border:1px solid #d0d4dc;border-radius:6px;background:#fff;font-size:12.5px;cursor:pointer}
-  .toolbar button.primary{background:#2563eb;color:#fff;border-color:#2563eb}
+  .toolbar{padding:8px 12px;border-bottom:1px solid var(--line);display:flex;gap:4px;flex-wrap:wrap}
+  .toolbar button{padding:5.5px 8px;border:1px solid #d5d9e0;border-radius:8px;background:#fff;font-size:12px;cursor:pointer;box-shadow:var(--shadow);transition:all .15s;color:var(--ink2);flex:1;min-width:0;white-space:nowrap}
+  .toolbar button:active{transform:scale(.96)}
+  .toolbar button.primary{background:var(--brand);color:var(--ink);border-color:var(--brand-dark);font-weight:700;box-shadow:0 2px 6px rgba(230,184,0,.35)}
   .toolbar button.active{background:#1e40af;color:#fff;border-color:#1e40af}
-  .filters{padding:6px 12px;border-bottom:1px solid #eee;font-size:12px;display:flex;gap:5px;align-items:center;flex-wrap:wrap}
-  .filters select,.filters input{font-size:12px;padding:3px 5px;border:1px solid #cbd5e1;border-radius:5px}
-  .filters input{width:100px}
-  .filters label{display:flex;align-items:center;gap:2px}
-  .tip{padding:6px 12px;background:#fff7d6;font-size:12px;color:#8a6d00;border-bottom:1px solid #eee;display:none}
-  #records{flex:1;overflow-y:auto;padding:8px 10px;font-size:13px;-webkit-overflow-scrolling:touch}
-  .group-title{font-weight:600;margin:10px 2px 4px;color:#374151;font-size:13px}
-  .rec{border:1px solid #e5e7eb;border-left:4px solid #ccc;border-radius:8px;padding:6px 8px;margin:5px 0;cursor:pointer;background:#fafafa}
-  .rec:hover{background:#eef4ff}
-  .rec .tag{display:inline-block;font-size:11px;padding:1px 6px;border-radius:4px;color:#fff;margin-right:5px}
-  .rec .stt{display:inline-block;font-size:10.5px;padding:1px 5px;border-radius:4px;margin-right:5px}
+  .filters{padding:7px 14px;border-bottom:1px solid var(--line);font-size:12px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;background:#fafbfc}
+  .filters select,.filters input{font-size:12px;padding:3.5px 7px;border:1px solid #d5d9e0;border-radius:7px;background:#fff;color:var(--ink2)}
+  .filters input{width:104px}
+  .filters label{display:flex;align-items:center;gap:2px;color:var(--ink2);flex-wrap:nowrap;white-space:nowrap}
+  .filters label input[type=checkbox]{margin:0 2px 0 0;width:13px;height:13px;accent-color:var(--blue);flex-shrink:0}
+  .tip{padding:7px 14px;background:#fff7d6;font-size:12px;color:#8a6d00;border-bottom:1px solid var(--line);display:none}
+  #records{flex:1;overflow-y:auto;padding:10px 12px 16px;font-size:13px;-webkit-overflow-scrolling:touch;background:var(--bg);min-height:0}
+  .group-title{font-weight:700;margin:12px 2px 5px;color:var(--ink);font-size:12.5px;display:flex;align-items:center;gap:6px}
+  .group-title::after{content:'';flex:1;height:1px;background:var(--line)}
+  .rec{border:1px solid var(--line);border-left:4px solid #ccc;border-radius:10px;padding:7px 9px;margin:6px 0;cursor:pointer;background:#fff;box-shadow:var(--shadow);transition:all .15s}
+  .rec:hover{background:#fff;box-shadow:var(--shadow-lg);transform:translateY(-1px)}
+  .rec .tag{display:inline-block;font-size:10.5px;padding:1.5px 7px;border-radius:6px;color:#fff;margin-right:5px;font-weight:500}
+  .rec .stt{display:inline-block;font-size:10.5px;padding:1.5px 6px;border-radius:6px;margin-right:5px;font-weight:600}
   .stt.open{background:#fee2e2;color:#b91c1c}
   .stt.doing{background:#fef3c7;color:#92400e}
   .stt.done{background:#dcfce7;color:#15803d}
-  .rec .nm{font-weight:600;font-size:13px}
+  .rec .nm{font-weight:600;font-size:13px;color:var(--ink)}
   .rec .nt{color:#6b7280;margin-top:2px;font-size:12px;word-break:break-all}
   .rec .dt{float:right;color:#9ca3af;font-size:11px}
-  .rec .dt.old{color:#dc2626;font-weight:600}
+  .rec .dt.old{color:var(--red);font-weight:600}
   .rec .recops{margin-top:4px;display:flex;gap:6px;align-items:center}
-  .rec .navbtn{font-size:11px;color:#2563eb;border:1px solid #bfdbfe;border-radius:5px;padding:1px 7px;background:#eff6ff;cursor:pointer}
-  .rec .thumb{max-width:52px;max-height:52px;border-radius:5px;margin-top:4px;margin-right:4px;cursor:zoom}
+  .rec .navbtn{font-size:11px;color:var(--blue);border:1px solid #bfdbfe;border-radius:6px;padding:1.5px 8px;background:#eff6ff;cursor:pointer}
+  .rec .thumb{max-width:54px;max-height:54px;border-radius:6px;margin-top:4px;margin-right:4px;cursor:zoom}
   .rec .pcount{font-size:11px;color:#6b7280}
-  .empty{color:#9ca3af;text-align:center;margin-top:30px;line-height:1.8}
-  #form{display:none;position:absolute;top:0;right:340px;width:300px;max-height:100%;overflow-y:auto;background:#fff;box-shadow:0 0 18px rgba(0,0,0,.18);padding:12px 14px;font-size:13px;z-index:1200;border-radius:0 0 0 10px;box-sizing:border-box}
-  #form h3{margin:0 0 6px;font-size:14px}
-  #form label{display:block;margin-top:7px;font-size:12px;color:#4b5563}
-  #form input,#form textarea,#form select{width:96%;padding:5px 6px;border:1px solid #cbd5e1;border-radius:5px;font-size:13px;margin-top:2px;box-sizing:border-box}
-  #form .btns{margin-top:10px;display:flex;gap:8px}
-  #form button{padding:6px 14px;border-radius:6px;border:none;cursor:pointer;font-size:13px}
-  #fOk{background:#2563eb;color:#fff} #fCancel{background:#e5e7eb} #fDel{background:#fee2e2;color:#b91c1c;margin-left:auto}
-  #photoRow{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
+  .empty{color:#9ca3af;text-align:center;margin-top:36px;line-height:1.9;font-size:12.5px}
+  #form{display:none;position:absolute;top:0;right:344px;width:300px;max-height:100%;overflow-y:auto;background:#fff;box-shadow:var(--shadow-lg);padding:13px 15px;font-size:13px;z-index:1200;border-radius:0 0 0 14px;box-sizing:border-box;border:1px solid var(--line);border-right:none}
+  #form h3{margin:0 0 7px;font-size:14.5px;color:var(--ink)}
+  #form label{display:block;margin-top:8px;font-size:11.5px;color:var(--ink2);font-weight:600}
+  #form input,#form textarea,#form select{width:96%;padding:6px 8px;border:1px solid #d5d9e0;border-radius:7px;font-size:13px;margin-top:3px;box-sizing:border-box;background:#fff;color:var(--ink)}
+  #form input:focus,#form textarea:focus,#form select:focus{outline:2px solid rgba(37,99,235,.25);border-color:var(--blue)}
+  #form .btns{margin-top:12px;display:flex;gap:8px}
+  #form button{padding:6.5px 15px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:500;box-shadow:var(--shadow)}
+  #fOk{background:var(--brand);color:var(--ink);font-weight:700} #fCancel{background:#e5e7eb;color:var(--ink2)} #fDel{background:#fee2e2;color:#b91c1c;margin-left:auto}
+  #photoRow{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
   #photoRow .ph{position:relative}
-  #photoRow img{width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid #d1d5db}
-  #photoRow .rm{position:absolute;top:-5px;right:-5px;background:#dc2626;color:#fff;border-radius:50%;width:17px;height:17px;font-size:11px;line-height:17px;text-align:center;cursor:pointer}
-  .legend{background:#fff;padding:8px 10px;border-radius:8px;box-shadow:0 1px 5px rgba(0,0,0,.2);font-size:12px;line-height:1.9}
-  .legend i{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:4px;vertical-align:-1px}
-  .dist-label{font-size:13px;font-weight:600;color:#1f2937;text-shadow:0 0 3px #fff,0 0 3px #fff;white-space:nowrap}
-  #storeBar{font-size:10.5px;color:#9ca3af;padding:3px 12px 30px;border-top:1px solid #f0f0f0}
-  #expandBtn{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);z-index:1001;background:rgba(255,255,255,.92);border:1px solid #d0d4dc;border-radius:16px;padding:3px 14px;font-size:12px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.15);display:none}
+  #photoRow img{width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid #d1d5db}
+  #photoRow .rm{position:absolute;top:-5px;right:-5px;background:var(--red);color:#fff;border-radius:50%;width:17px;height:17px;font-size:11px;line-height:17px;text-align:center;cursor:pointer;box-shadow:var(--shadow)}
+  .legend{background:rgba(255,255,255,.95);padding:9px 12px;border-radius:10px;box-shadow:var(--shadow-lg);font-size:12px;line-height:1.9;border:1px solid var(--line)}
+  .legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+  .dist-label{font-size:13px;font-weight:700;color:var(--ink);text-shadow:0 0 3px #fff,0 0 4px #fff,0 0 5px #fff;white-space:nowrap}
+  #storeBar{font-size:10.5px;color:#9ca3af;padding:4px 14px 26px;border-top:1px solid var(--line);background:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0}
+  #expandBtn{position:absolute;bottom:calc(10px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);z-index:1001;background:rgba(255,255,255,.95);border:1px solid #d5d9e0;border-radius:18px;padding:4px 16px;font-size:12px;cursor:pointer;box-shadow:var(--shadow-lg);display:none;font-weight:500;color:var(--ink2)}
+
+  /* Leaflet 弹窗与控件美化 */
+  .leaflet-popup-content-wrapper{border-radius:12px;box-shadow:var(--shadow-lg);border:1px solid var(--line)}
+  .leaflet-popup-content{margin:10px 12px;font-size:12.5px;line-height:1.6}
+  .leaflet-popup-tip{box-shadow:none}
+  .leaflet-bar a{border-radius:6px !important;color:#4b5563}
+  .leaflet-control-zoom{border:1px solid var(--line);border-radius:9px;box-shadow:var(--shadow-lg)}
 
   /* ===== 移动端 ===== */
   @media (max-width: 768px){
     #app{flex-direction:column}
     #map{height:52%}
-    #side{width:100%;height:48%;box-shadow:0 -3px 12px rgba(0,0,0,.12)}
-    #side header{padding:6px 12px 4px}
+    #side{width:100%;height:48%;box-shadow:0 -3px 14px rgba(0,0,0,.12);border-radius:14px 14px 0 0}
+    #side header{padding:8px 14px 6px;border-radius:14px 14px 0 0}
     #side header small{display:none}
     #side header h1{font-size:13.5px}
-    #form{position:fixed;top:0;right:0;left:0;bottom:0;width:100%;max-height:none;height:100%;border-radius:0;z-index:2000;padding:14px 16px}
+    .stats{padding:7px 12px}
+    #form{position:fixed;top:0;right:0;left:0;bottom:0;width:100%;max-height:none;height:100%;border-radius:0;z-index:2000;padding:14px 16px;border:none}
     #form .btns{padding-bottom:20px}
     #expandBtn{display:block}
     body.side-full #map{height:30%}
     body.side-full #side{height:70%}
     body.side-full #records{display:block}
     body.side-peek #records{display:none}
-    .filters{overflow-x:auto;flex-wrap:nowrap;white-space:nowrap;gap:7px;padding:7px 12px}
+    .filters{overflow-x:auto;flex-wrap:nowrap;white-space:nowrap;gap:7px;padding:7px 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+    .filters::-webkit-scrollbar{display:none}
+    .filters select,.filters input{flex-shrink:0}
     .filters input{width:88px}
+    .filters input#kw{width:88px}
     .legend{display:none}
+    .toolbar{padding:7px 12px}
   }
 </style>
 </head>
@@ -757,7 +781,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   <div id="side">
     <header>
       <h1>成都二三圈层作战地图</h1>
-      <small>数据保存在本机浏览器 · 记得定期导出备份</small>
+      <small>云同步已开启 · 数据自动双向同步（换设备前点☁同步）</small>
     </header>
     <div class="stats" id="stats"></div>
     <div id="coverage"><div class="cov-title">区县覆盖</div><div class="chips" id="covChips"></div></div>
@@ -766,10 +790,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
       <button id="addBtn" class="primary">＋打点</button>
       <button id="locBtn">📍定位</button>
       <button id="syncBtn">☁同步</button>
-      <button id="cfgBtn">⚙</button>
-      <button id="exportBtn">备份</button>
-      <button id="csvBtn">CSV</button>
-      <button id="importBtn">导入</button>
+      <button id="cfgBtn" title="设置">⚙</button>
+      <button id="exportBtn" title="导出JSON备份">备份</button>
+      <button id="csvBtn" title="导出Excel表格">CSV</button>
+      <button id="importBtn" title="导入备份文件">导入</button>
       <input type="file" id="importFile" accept=".json" style="display:none">
     </div>
     <div class="filters">
@@ -1039,7 +1063,7 @@ function renderStats(){
     '<div class="st"><b>'+records.length+'</b>总记录</div>'+
     '<div class="st"><b>'+Object.keys(SCHEMAS).length+'</b>类型</div>'+
     '<div class="st"><b>'+week+'</b>本周</div>'+
-    '<div class="st warn"><b>'+open+'</b>待跟进</div>';
+    '<div class="st'+(open>0?' warn':'')+'"><b>'+open+'</b>待跟进</div>';
   // 覆盖率
   var cnt={};
   records.forEach(function(r){ cnt[r.district]=(cnt[r.district]||0)+1; });
